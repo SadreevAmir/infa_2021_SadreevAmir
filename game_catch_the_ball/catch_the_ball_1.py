@@ -8,7 +8,7 @@ points = 0
 screen_width = 1200
 screen_height = 900
 number_of_balls = 15
-difficulty = 0.5
+difficulty = 1
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 
@@ -42,7 +42,7 @@ def new_ball():
 def scoreboard(points):
     font = pygame.font.Font(None, 25)
     text = font.render("Очки: "+str(points), True, RED)
-    screen.blit(text, [50, 50])
+    screen.blit(text, [screen_width/24, screen_height/24])
 
 
 clock = pygame.time.Clock()
