@@ -2,7 +2,7 @@ import math
 import random
 
 import pygame
-from pygame.draw import polygon
+from pygame.draw import circle, polygon
 
 
 FPS = 30
@@ -69,6 +69,10 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
+        if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
+            return True
+        else: 
+            return False
 class Gun:
     def __init__(self, screen):
         self.x = WIDTH/100
@@ -121,24 +125,24 @@ class Gun:
 
 
 class Target:
-    # self.points = 0
-    # self.live = 1
-    # FIXME: don't work!!! How to call this functions when object is created?
-    # self.new_target()
-
+    def __init__(self, screen):
+        self.points = 0
+        self.new_target()
+        self.screen = screen
     def new_target(self):
         """ Инициализация новой цели. """
         x = self.x = random.randint(600, 780)
         y = self.y = random.randint(300, 550)
         r = self.r = random.randint(2, 50)
         color = self.color = RED
+        self.live = 1
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
         self.points += points
 
     def draw(self):
-        ...
+        circle(screen, self.color, (self.x, self.y), self.r)
 
 
 pygame.init()
@@ -148,7 +152,7 @@ balls = []
 
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target = Target()
+target = Target(screen)
 finished = False
 
 while not finished:
@@ -172,7 +176,7 @@ while not finished:
 
     for b in balls:
         b.move()
-        if b.hittest(target) and target.live:
+        if b.hittest(target) and target.live == 1:
             target.live = 0
             target.hit()
             target.new_target()
