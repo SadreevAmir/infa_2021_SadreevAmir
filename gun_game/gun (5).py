@@ -2,6 +2,7 @@ import math
 import random
 
 import pygame
+from pygame import surface
 from pygame.draw import circle, polygon
 
 
@@ -76,8 +77,9 @@ class Ball:
 class Gun:
     def __init__(self, screen):
         self.x = WIDTH/100
-        self.y = HEIGHT*9/10
+        self.y = HEIGHT*7/10
         self.lenght = 100
+        self.thickness = 10
         self.screen = screen
         self.f2_power = 10
         self.f2_on = 0
@@ -105,6 +107,7 @@ class Gun:
         self.f2_power = 10
 
     def targetting(self, event):
+
         """Прицеливание. Зависит от положения мыши."""
         if event:
             self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
@@ -114,7 +117,11 @@ class Gun:
             self.color = GREY
 
     def draw(self):
-        0 == 0
+        polygon(self.screen, BLACK, [[self.x, self.y], 
+                [self.x - self.thickness*math.sin(self.an), self.y + self.thickness*math.cos(self.an)], 
+                [self.x - self.thickness*math.sin(self.an) + self.lenght*math.cos(self.an),
+                self.y + self.thickness*math.cos(self.an) + self.lenght*math.sin(self.an)],
+                [self.x + self.lenght*math.cos(self.an), self.y + + self.lenght*math.sin(self.an)]])
     def power_up(self):
         if self.f2_on:
             if self.f2_power < 100:
