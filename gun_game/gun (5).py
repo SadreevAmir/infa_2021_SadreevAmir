@@ -6,7 +6,8 @@ from pygame import surface
 from pygame.draw import circle, polygon
 
 
-FPS = 30
+FPS = 60
+number_of_targets = 3
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -23,6 +24,8 @@ WIDTH = 800
 HEIGHT = 600
 
 bullet = 0
+points = 0
+lenght = 0
 balls = []
 
 
@@ -33,6 +36,7 @@ class Ball:
         Args:
         x - начальное положение мяча по горизонтали
         y - начальное положение мяча по вертикали
+        g - ускорение свообжного падения
         """
         self.screen = screen
         self.x = x
@@ -42,6 +46,7 @@ class Ball:
         self.vy = 0
         self.color = random.choice(GAME_COLORS)
         self.live = 30
+        self.g = 1
 
     def move(self):
         """Переместить мяч по прошествии единицы времени.
@@ -51,7 +56,7 @@ class Ball:
         и стен по краям окна (размер окна 800х600).
         """
         self.x += self.vx
-        self.vy -= 1
+        self.vy -= self.g
         self.y -= self.vy
 
     def draw(self):
@@ -74,11 +79,33 @@ class Ball:
             return True
         else: 
             return False
+        
+    def screen_limits(self):
+        '''функция проверяет, сталкивается ли шарик со стеной и меняет знак скорости  так,
+
+         чтобы шарики отскакивали от стен'''
+        if self.x < self.r and self.vx <= 0:
+            self.vx = -self.vx*3/5
+        if self.x > WIDTH - self.r and b.vx >= 0:
+            self.vx = -self.vx*3/5 
+        if self.y < self.r and self.vy >= 0:
+            self.vy = -self.vy*4/5 - 2
+        if self.y > HEIGHT - self.r and b.vy <= 0:
+            self.vy = -self.vy*4/5
+        if  self.y >=  HEIGHT - 2*self.r and abs(self.vy) < 0.2:
+            self.vy = 0
+            self.g = 0
+            self.y = HEIGHT - self.r
+        if abs(self.vx) < 1.5 and abs(self.x - WIDTH/2) < WIDTH*11/23 - self.r:
+            self.r = 0
+
+
+
 class Gun:
     def __init__(self, screen):
         self.x = WIDTH/100
         self.y = HEIGHT*7/10
-        self.lenght = 100
+        self.lenght = lenght
         self.thickness = 10
         self.screen = screen
         self.f2_power = 10
@@ -117,18 +144,30 @@ class Gun:
             self.color = GREY
 
     def draw(self):
-        polygon(self.screen, BLACK, [[self.x, self.y], 
+        polygon(self.screen, self.color,
+                [[self.x, self.y], 
                 [self.x - self.thickness*math.sin(self.an), self.y + self.thickness*math.cos(self.an)], 
-                [self.x - self.thickness*math.sin(self.an) + self.lenght*math.cos(self.an),
-                self.y + self.thickness*math.cos(self.an) + self.lenght*math.sin(self.an)],
-                [self.x + self.lenght*math.cos(self.an), self.y + + self.lenght*math.sin(self.an)]])
+                [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
+                self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
+                [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
+
     def power_up(self):
         if self.f2_on:
-            if self.f2_power < 100:
+            if self.f2_power < 1000:
                 self.f2_power += 1
             self.color = RED
         else:
             self.color = GREY
+
+def scoreboard(text: str , points: int):
+    '''отображает счет на табло
+    k - отношение y координаты табло к высоте экрана
+    text - надпись на табло
+    points - значение, выводимое на табло
+    '''
+    font = pygame.font.Font(None, 25)
+    text = font.render(text+str(points), True, RED)
+    screen.blit(text, [WIDTH/24, HEIGHT/24])
 
 
 class Target:
@@ -136,6 +175,7 @@ class Target:
         self.points = 0
         self.new_target()
         self.screen = screen
+
     def new_target(self):
         """ Инициализация новой цели. """
         x = self.x = random.randint(600, 780)
@@ -149,6 +189,7 @@ class Target:
         self.points += points
 
     def draw(self):
+        '''рисует цель'''
         circle(screen, self.color, (self.x, self.y), self.r)
 
 
@@ -159,13 +200,16 @@ balls = []
 
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target = Target(screen)
+target1 = Target(screen)
+target2 = Target(screen)
 finished = False
 
 while not finished:
+    scoreboard("Очки: ", points)
     screen.fill(WHITE)
     gun.draw()
-    target.draw()
+    target1.draw()
+    target2.draw()
     for b in balls:
         b.draw()
     pygame.display.update()
@@ -183,10 +227,17 @@ while not finished:
 
     for b in balls:
         b.move()
-        if b.hittest(target) and target.live == 1:
-            target.live = 0
-            target.hit()
-            target.new_target()
+        if b.hittest(target1) and target1.live == 1:
+            target1.live = 0
+            target1.hit()
+            target1.new_target()
+            points += 1
+        if b.hittest(target2) and target2.live == 1:
+            target2.live = 0
+            target2.hit()
+            target2.new_target()
+            points += 1
+        b.screen_limits()
     gun.power_up()
 
 pygame.quit()
