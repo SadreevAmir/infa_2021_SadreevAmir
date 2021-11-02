@@ -3,6 +3,7 @@ import random
 
 import pygame
 from pygame import surface
+from pygame.constants import KEYDOWN, KEYUP
 from pygame.draw import circle, polygon
 
 
@@ -26,7 +27,9 @@ WIDTH = 800
 HEIGHT = 600
 
 score = 0
+time = 0
 targets = []
+move = True
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
@@ -113,6 +116,8 @@ class Gun:
     def __init__(self, screen, x = 40, y = 450):
         self.x = x
         self.y = y
+        self.vx = 0
+        self.vy = 0
         self.lenght = 0
         self.thickness = 10
         self.screen = screen
@@ -152,12 +157,24 @@ class Gun:
             self.color = GREY
 
     def draw(self):
+        polygon(self.screen, BLACK,
+                [[self.x - 50*math.cos(math.pi/4 + self.an), self.y - 50*math.sin(math.pi/4 + self.an)], 
+                [self.x - 50*math.cos( math.pi/4 - self.an) , self.y + 50*math.sin(math.pi/4 - self.an)], 
+                [self.x + 50*math.cos(math.pi/4 + self.an),self.y + 50*math.sin(math.pi/4 + self.an)],
+                [self.x + 50*math.cos(math.pi/4 - self.an), self.y - 50*math.sin(math.pi/4 - self.an)]])
+
         polygon(self.screen, self.color,
                 [[self.x, self.y], 
                 [self.x - self.thickness*math.sin(self.an), self.y + self.thickness*math.cos(self.an)], 
                 [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
                 self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
                 [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
+
+    def move_gun(self):
+        self.vx = math.cos(self.an)
+        self.vy = math.sin(self.an)
+        self.x += self.vx
+        self.y += self.vy
 
     def power_up(self):
         if self.f2_on:
@@ -184,6 +201,8 @@ class Target:
         self.new_target()
         self.screen = screen
         self.vy = 3
+        self.vx = 0
+        self.type = random.randint(0, 1)
 
     def new_target(self):
         """ Инициализация новой цели. """
@@ -199,10 +218,16 @@ class Target:
 
     def draw(self):
         '''рисует цель'''
+        if self.type == 1:
+            self.color = BLACK
         circle(screen, self.color, (self.x, self.y), self.r)
 
     def move_target(self):
+        if self.type == 1:
+            self.vx = 10*math.sin(time/2)
         self.y += self.vy
+        self.x += self.vx
+
         if self.y <= self.r or self.y >= HEIGHT - self.r:
             self.vy = -self.vy
 
@@ -230,17 +255,22 @@ while not finished:
     pygame.display.update()
 
     clock.tick(FPS)
+    time += 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             gun.fire2_start(event)
-
         elif event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end(event)
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
-
+        if event.type == KEYDOWN:
+            move = True
+        if event.type == KEYUP:
+            move = False
+        if move:
+            gun.move_gun()
     for b in balls:
         b.move()
         for target in targets:
