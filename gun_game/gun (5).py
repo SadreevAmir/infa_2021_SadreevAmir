@@ -46,6 +46,7 @@ class Ball:
         self.color = random.choice(GAME_COLORS)
         self.live = 30
         self.g = 1
+        self.type = random.randint(0, 1)
 
     def move(self):
         """Переместить мяч по прошествии единицы времени.
@@ -54,9 +55,14 @@ class Ball:
         self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
         и стен по краям окна (размер окна 800х600).
         """
-        self.x += self.vx
-        self.vy -= self.g
-        self.y -= self.vy
+        if self.type == 0:
+            self.x += self.vx
+            self.vy -= self.g
+            self.y -= self.vy
+
+        if self.type == 1:
+            self.x += self.vx
+            self.y -= self.vy
 
     def draw(self):
         pygame.draw.circle(
