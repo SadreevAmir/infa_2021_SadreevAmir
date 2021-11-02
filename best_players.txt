@@ -1,0 +1,4 @@
+& C:/Users/amira/AppData/Local/Microsoft/WindowsApps/python3.9.exe c:/Users/amira/infa_2021_SadreevAmir/game_catch_the_ball/catch_the_ball_1.py:  18
+& C:/Users/amira/AppData/Local/Microsoft/WindowsApps/python3.9.exe c:/Users/amira/infa_2021_SadreevAmir/game_catch_the_ball/catch_the_ball_1.py:  0
+& C:/Users/amira/AppData/Local/Microsoft/WindowsApps/python3.9.exe c:/Users/amira/infa_2021_SadreevAmir/game_catch_the_ball/catch_the_ball_1.py:  0
+& C:/Users/amira/AppData/Local/Microsoft/WindowsApps/python3.9.exe c:/Users/amira/infa_2021_SadreevAmir/game_catch_the_ball/catch_the_ball_1.py:  294

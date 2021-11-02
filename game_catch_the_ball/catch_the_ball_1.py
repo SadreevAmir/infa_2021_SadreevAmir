@@ -10,10 +10,10 @@ points = 0
 score = 0
 screen_width = 1200
 screen_height = 800
-number_of_balls = 5
-number_of_special_targets = 4
+number_of_balls = 1000
+number_of_special_targets = 1000
 turnes = 0
-difficulty = 0.5
+difficulty = 10
 finished = False
 screen = pygame.display.set_mode((screen_width, screen_height))
 

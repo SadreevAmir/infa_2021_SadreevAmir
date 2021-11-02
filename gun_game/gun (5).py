@@ -6,8 +6,10 @@ from pygame import surface
 from pygame.draw import circle, polygon
 
 
+
+
 FPS = 60
-number_of_targets = 3
+number_of_targets = 2
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -23,11 +25,8 @@ GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 WIDTH = 800
 HEIGHT = 600
 
-bullet = 0
-points = 0
-lenght = 0
-balls = []
-
+score = 0
+targets = []
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
@@ -102,16 +101,18 @@ class Ball:
 
 
 class Gun:
+
     def __init__(self, screen):
         self.x = WIDTH/100
         self.y = HEIGHT*7/10
-        self.lenght = lenght
+        self.lenght = 0
         self.thickness = 10
         self.screen = screen
         self.f2_power = 10
         self.f2_on = 0
         self.an = 1
         self.color = GREY
+        balls = []
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -122,8 +123,6 @@ class Gun:
         Происходит при отпускании кнопки мыши.
         Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
         """
-        global balls, bullet
-        bullet += 1
         new_ball = Ball(self.screen)
         new_ball.r += 5
         self.an = math.atan2((event.pos[1]-new_ball.y), (event.pos[0]-new_ball.x))
@@ -132,6 +131,7 @@ class Gun:
         balls.append(new_ball)
         self.f2_on = 0
         self.f2_power = 10
+
 
     def targetting(self, event):
 
@@ -175,6 +175,7 @@ class Target:
         self.points = 0
         self.new_target()
         self.screen = screen
+        self.vy = 3
 
     def new_target(self):
         """ Инициализация новой цели. """
@@ -192,24 +193,31 @@ class Target:
         '''рисует цель'''
         circle(screen, self.color, (self.x, self.y), self.r)
 
+    def move_target(self):
+        self.y += self.vy
+        if self.y <= self.r or self.y >= HEIGHT - self.r:
+            self.vy = -self.vy
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-bullet = 0
-balls = []
-
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target1 = Target(screen)
-target2 = Target(screen)
+balls = []
 finished = False
 
+for i in range(number_of_targets):
+    target = Target(screen)
+    target.new_target()
+    targets.append(target)
+
 while not finished:
-    scoreboard("Очки: ", points)
     screen.fill(WHITE)
+    scoreboard("Очки: ", score)
     gun.draw()
-    target1.draw()
-    target2.draw()
+    for target in targets:
+        target.draw()
     for b in balls:
         b.draw()
     pygame.display.update()
@@ -220,6 +228,7 @@ while not finished:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             gun.fire2_start(event)
+
         elif event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end(event)
         elif event.type == pygame.MOUSEMOTION:
@@ -227,17 +236,17 @@ while not finished:
 
     for b in balls:
         b.move()
-        if b.hittest(target1) and target1.live == 1:
-            target1.live = 0
-            target1.hit()
-            target1.new_target()
-            points += 1
-        if b.hittest(target2) and target2.live == 1:
-            target2.live = 0
-            target2.hit()
-            target2.new_target()
-            points += 1
+        for target in targets:
+            if b.hittest(target) and target.live == 1:
+                target.live = 0
+                target.hit()
+                target.new_target()
+                score += 1
         b.screen_limits()
+    
+    for target in targets:
+         target.move_target()
+
     gun.power_up()
 
 pygame.quit()
