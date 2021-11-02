@@ -46,7 +46,7 @@ class Ball:
         self.color = random.choice(GAME_COLORS)
         self.live = 30
         self.g = 1
-        self.type = random.randint(0, 1)
+        self.type = random.randint(-3, 1)
 
     def move(self):
         """Переместить мяч по прошествии единицы времени.
@@ -55,7 +55,7 @@ class Ball:
         self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
         и стен по краям окна (размер окна 800х600).
         """
-        if self.type == 0:
+        if self.type != 1:
             self.x += self.vx
             self.vy -= self.g
             self.y -= self.vy
@@ -65,6 +65,8 @@ class Ball:
             self.y -= self.vy
 
     def draw(self):
+        if self.type == 1:
+            self.color = BLACK
         pygame.draw.circle(
             self.screen,
             self.color,
@@ -108,9 +110,9 @@ class Ball:
 
 class Gun:
 
-    def __init__(self, screen):
-        self.x = WIDTH/100
-        self.y = HEIGHT*7/10
+    def __init__(self, screen, x = 40, y = 450):
+        self.x = x
+        self.y = y
         self.lenght = 0
         self.thickness = 10
         self.screen = screen
@@ -118,7 +120,7 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.color = GREY
-        balls = []
+
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -210,9 +212,8 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 gun = Gun(screen)
-balls = []
 finished = False
-
+balls = []
 for i in range(number_of_targets):
     target = Target(screen)
     target.new_target()
