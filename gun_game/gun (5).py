@@ -1,9 +1,10 @@
+
 import math
 import random
 
 import pygame
 from pygame import surface
-from pygame.constants import KEYDOWN, KEYUP
+from pygame.constants import K_UP, KEYDOWN, KEYUP, MOUSEMOTION
 from pygame.draw import circle, polygon
 
 
@@ -21,7 +22,7 @@ CYAN = 0x00FFCC
 BLACK = (0, 0, 0)
 WHITE = 0xFFFFFF
 GREY = 0x7D7D7D
-GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+GAME_COLORS = [BLUE, YELLOW, GREEN, CYAN]
 
 WIDTH = 800
 HEIGHT = 600
@@ -69,7 +70,7 @@ class Ball:
 
     def draw(self):
         if self.type == 1:
-            self.color = BLACK
+            self.color = MAGENTA
         pygame.draw.circle(
             self.screen,
             self.color,
@@ -113,7 +114,7 @@ class Ball:
 
 class Gun:
 
-    def __init__(self, screen, x = 40, y = 450):
+    def __init__(self, screen, x = 200, y = 450):
         self.x = x
         self.y = y
         self.vx = 0
@@ -140,10 +141,6 @@ class Gun:
         new_ball.r += 5
         new_ball.x = self.x
         new_ball.y = self.y
-        if (event.pos[0]-new_ball.x) < 0:
-            self.an = math.atan2((event.pos[1]-new_ball.y), (event.pos[0]-new_ball.x))
-        else:
-            self.an = math.pi - math.atan2((event.pos[1]-new_ball.y), (event.pos[0]-new_ball.x))
         new_ball.vx = self.f2_power * math.cos(self.an)
         new_ball.vy = - self.f2_power * math.sin(self.an)
         balls.append(new_ball)
@@ -154,8 +151,6 @@ class Gun:
     def targetting(self, event):
 
         """Прицеливание. Зависит от положения мыши."""
-        if event:
-            self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
         if self.f2_on:
             self.color = RED
         else:
@@ -174,8 +169,26 @@ class Gun:
                 [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
                 self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
                 [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
+    
+    def hittest(self, obj):
+        """Функция проверяет сталкивалкивается ли данный обьект с целью, описываемой в обьекте obj.
+
+        Args:
+            obj: Обьект, с которым проверяется столкновение.
+        Returns:
+            Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
+        """
+        if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (50 + obj.r)**2:
+            return True
+        else: 
+            return False
 
     def move_gun(self):
+        if event.type == MOUSEMOTION:
+            if self.x == event.pos[0]:
+                self.an = math.pi/2
+            else:
+                self.an = math.atan2((event.pos[1] - self.y), (event.pos[0] - self.x))
         self.vx = math.cos(self.an)
         self.vy = math.sin(self.an)
         self.x += self.vx
@@ -207,11 +220,11 @@ class Target:
         self.screen = screen
         self.vy = 3
         self.vx = 0
-        self.type = random.randint(0, 1)
+        self.type = random.randint(0, 3)
 
     def new_target(self):
         """ Инициализация новой цели. """
-        x = self.x = random.randint(600, 780)
+        x = self.x = random.randint(0, 780)
         y = self.y = random.randint(300, 550)
         r = self.r = random.randint(2, 50)
         color = self.color = RED
@@ -270,9 +283,9 @@ while not finished:
             gun.fire2_end(event)
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
-        if event.type == KEYDOWN:
+        if event.type == KEYDOWN and event.key == K_UP:
             move = True
-        if event.type == KEYUP:
+        if event.type == KEYUP and event.key == K_UP:
             move = False
         if move:
             gun.move_gun()
@@ -287,8 +300,11 @@ while not finished:
         b.screen_limits()
     
     for target in targets:
-         target.move_target()
+        target.move_target()
+        if gun.hittest(target) and target.type == 1:
+            del gun
 
     gun.power_up()
 
 pygame.quit()
+                                                               
