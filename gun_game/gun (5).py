@@ -4,14 +4,13 @@ import random
 
 import pygame
 from pygame import surface
+from pygame import draw
 from pygame.constants import K_UP, KEYDOWN, KEYUP, MOUSEMOTION
 from pygame.draw import circle, polygon
 
-
-
-
 FPS = 60
 number_of_targets = 2
+number_of_guns = 3
 
 RED = 0xFF0000
 BLUE = 0x0000FF
@@ -30,7 +29,9 @@ HEIGHT = 600
 score = 0
 time = 0
 targets = []
+guns = []
 move = True
+
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
@@ -47,7 +48,7 @@ class Ball:
         self.r = 10
         self.vx = 0
         self.vy = 0
-        self.color = random.choice(GAME_COLORS)
+        self.color = GREEN
         self.live = 30
         self.g = 1
         self.type = random.randint(-3, 1)
@@ -71,6 +72,8 @@ class Ball:
     def draw(self):
         if self.type == 1:
             self.color = MAGENTA
+        if self.type == 2:
+            self.color = GREY
         pygame.draw.circle(
             self.screen,
             self.color,
@@ -88,9 +91,9 @@ class Ball:
         """
         if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
             return True
-        else: 
+        else:
             return False
-        
+
     def screen_limits(self):
         '''функция проверяет, сталкивается ли шарик со стеной и меняет знак скорости  так,
 
@@ -98,23 +101,32 @@ class Ball:
         if self.x < self.r and self.vx <= 0:
             self.vx = -self.vx*3/5
         if self.x > WIDTH - self.r and b.vx >= 0:
-            self.vx = -self.vx*3/5 
+            self.vx = -self.vx*3/5
         if self.y < self.r and self.vy >= 0:
             self.vy = -self.vy*4/5 - 2
         if self.y > HEIGHT - self.r and b.vy <= 0:
             self.vy = -self.vy*4/5
-        if  self.y >=  HEIGHT - 2*self.r and abs(self.vy) < 0.2:
+        if self.y >= HEIGHT - 2*self.r and abs(self.vy) < 0.2:
             self.vy = 0
             self.g = 0
             self.y = HEIGHT - self.r
         if abs(self.vx) < 1.5 and abs(self.x - WIDTH/2) < WIDTH*11/23 - self.r:
             self.r = 0
 
+def new_ball(obj):
+    ball_1 = Ball(screen)
+    balls.append(ball_1)
+    ball_1.vx= random.randint(-20, 20)
+    ball_1.vy = random.randint(-20, 20)
+    ball_1.type = 2                                
+    ball_1.x = obj.x
+    ball_1.y = obj.y
+
 
 
 class Gun:
 
-    def __init__(self, screen, x = 200, y = 450):
+    def __init__(self, screen, x=200, y=450):
         self.x = x
         self.y = y
         self.vx = 0
@@ -126,7 +138,7 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.color = GREY
-
+        self.lifes = 100
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -147,29 +159,39 @@ class Gun:
         self.f2_on = 0
         self.f2_power = 10
 
-
     def targetting(self, event):
-
         """Прицеливание. Зависит от положения мыши."""
         if self.f2_on:
             self.color = RED
         else:
             self.color = GREY
 
+    def draw_gun(self):
+        polygon(self.screen, self.color,
+                [[self.x, self.y],
+                 [self.x - self.thickness *
+                     math.sin(self.an), self.y + self.thickness*math.cos(self.an)],
+                 [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
+                 self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
+                 [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
+
     def draw(self):
         polygon(self.screen, BLACK,
-                [[self.x - 50*math.cos(math.pi/4 + self.an), self.y - 50*math.sin(math.pi/4 + self.an)], 
-                [self.x - 50*math.cos( math.pi/4 - self.an) , self.y + 50*math.sin(math.pi/4 - self.an)], 
-                [self.x + 50*math.cos(math.pi/4 + self.an),self.y + 50*math.sin(math.pi/4 + self.an)],
-                [self.x + 50*math.cos(math.pi/4 - self.an), self.y - 50*math.sin(math.pi/4 - self.an)]])
+                [[self.x - 50*math.cos(math.pi/4 + self.an), self.y - 50*math.sin(math.pi/4 + self.an)],
+                 [self.x - 50*math.cos(math.pi/4 - self.an),
+                  self.y + 50*math.sin(math.pi/4 - self.an)],
+                 [self.x + 50*math.cos(math.pi/4 + self.an),
+                  self.y + 50*math.sin(math.pi/4 + self.an)],
+                 [self.x + 50*math.cos(math.pi/4 - self.an), self.y - 50*math.sin(math.pi/4 - self.an)]])
 
         polygon(self.screen, self.color,
-                [[self.x, self.y], 
-                [self.x - self.thickness*math.sin(self.an), self.y + self.thickness*math.cos(self.an)], 
-                [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
-                self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
-                [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
-    
+                [[self.x, self.y],
+                 [self.x - self.thickness *
+                     math.sin(self.an), self.y + self.thickness*math.cos(self.an)],
+                 [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
+                 self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
+                 [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
+
     def hittest(self, obj):
         """Функция проверяет сталкивалкивается ли данный обьект с целью, описываемой в обьекте obj.
 
@@ -180,7 +202,7 @@ class Gun:
         """
         if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (50 + obj.r)**2:
             return True
-        else: 
+        else:
             return False
 
     def move_gun(self):
@@ -188,9 +210,10 @@ class Gun:
             if self.x == event.pos[0]:
                 self.an = math.pi/2
             else:
-                self.an = math.atan2((event.pos[1] - self.y), (event.pos[0] - self.x))
-        self.vx = math.cos(self.an)
-        self.vy = math.sin(self.an)
+                self.an = math.atan2(
+                    (event.pos[1] - self.y), (event.pos[0] - self.x))
+        self.vx = 5*math.cos(self.an)
+        self.vy = 5*math.sin(self.an)
         self.x += self.vx
         self.y += self.vy
 
@@ -202,7 +225,8 @@ class Gun:
         else:
             self.color = GREY
 
-def scoreboard(text: str , points: int):
+
+def scoreboard(text: str, points: int):
     '''отображает счет на табло
     k - отношение y координаты табло к высоте экрана
     text - надпись на табло
@@ -250,11 +274,13 @@ class Target:
             self.vy = -self.vy
 
 
-
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 gun = Gun(screen)
+gun_2 = Gun(screen)
+gun_2.x = random.randint(0, 500)
+
 finished = False
 balls = []
 for i in range(number_of_targets):
@@ -263,17 +289,24 @@ for i in range(number_of_targets):
     targets.append(target)
 
 while not finished:
+
     screen.fill(WHITE)
     scoreboard("Очки: ", score)
+    scoreboard("                  Жизни: ", gun.lifes)
     gun.draw()
+    gun_2.draw()
     for target in targets:
         target.draw()
     for b in balls:
         b.draw()
     pygame.display.update()
 
-    clock.tick(FPS)
+    clock.tick(FPS)               
     time += 1
+
+    if time % 100 == 0:
+        new_ball(gun_2)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
@@ -288,7 +321,8 @@ while not finished:
         if event.type == KEYUP and event.key == K_UP:
             move = False
         if move:
-            gun.move_gun()
+            gun.move_gun() 
+
     for b in balls:
         b.move()
         for target in targets:
@@ -298,13 +332,26 @@ while not finished:
                 target.new_target()
                 score += 1
         b.screen_limits()
-    
+   
+
     for target in targets:
         target.move_target()
         if gun.hittest(target) and target.type == 1:
-            del gun
+            gun.lifes -= 1
+        for b in balls:
+            if gun.hittest(b) and b.type == 2:
+                gun.lifes -= 1
+    
+    if gun.lifes <= 0:
+        screen.fill(WHITE)
+        scoreboard("вы проиграли ", score)
+        pygame.display.update()
+
+        clock.tick(1/10)
+        break
 
     gun.power_up()
 
+screen.fill(WHITE)
+
 pygame.quit()
-                                                               
