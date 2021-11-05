@@ -70,6 +70,7 @@ class Ball:
             self.y -= self.vy
 
     def draw(self):
+        'рисует мячик'
         if self.type == 1:
             self.color = MAGENTA
         if self.type == 2:
@@ -89,10 +90,8 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
-        if (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2:
-            return True
-        else:
-            return False
+        return (self.x - obj.x)**2 + (self.y - obj.y)**2 <= (self.r + obj.r)**2
+           
 
     def screen_limits(self):
         '''функция проверяет, сталкивается ли шарик со стеной и меняет знак скорости  так,
@@ -113,12 +112,13 @@ class Ball:
         if abs(self.vx) < 1.5 and abs(self.x - WIDTH/2) < WIDTH*11/23 - self.r:
             self.r = 0
 
-def new_ball(obj):
+def new_ball(obj, type):
+    'создает новый объект класса Ball, координаты которого совпадают с координитами obj '
     ball_1 = Ball(screen)
     balls.append(ball_1)
     ball_1.vx= random.randint(-20, 20)
     ball_1.vy = random.randint(-20, 20)
-    ball_1.type = 2                                
+    ball_1.type = type                             
     ball_1.x = obj.x
     ball_1.y = obj.y
 
@@ -127,6 +127,17 @@ def new_ball(obj):
 class Gun:
 
     def __init__(self, screen, x=200, y=450):
+        '''конструктор класса Gun
+        Args:
+        x , y - координаты объекта
+        vx, vy - проекции скоростей объекта
+        lenght - длина пушки
+        thickness - ширина ствола пушки
+        color - цвет пушки
+        lives - число жизней пушки
+        an - угол наклона пушки
+        f2_power - мощность выстрела
+        '''
         self.x = x
         self.y = y
         self.vx = 0
@@ -138,9 +149,10 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.color = GREY
-        self.lifes = 100
+        self.lives = 100
 
     def fire2_start(self, event):
+        'переход в режим стрельбы'
         self.f2_on = 1
 
     def fire2_end(self, event):
@@ -166,16 +178,8 @@ class Gun:
         else:
             self.color = GREY
 
-    def draw_gun(self):
-        polygon(self.screen, self.color,
-                [[self.x, self.y],
-                 [self.x - self.thickness *
-                     math.sin(self.an), self.y + self.thickness*math.cos(self.an)],
-                 [self.x - self.thickness*math.sin(self.an) + (self.lenght + self.f2_power)*math.cos(self.an),
-                 self.y + self.thickness*math.cos(self.an) + (self.lenght + self.f2_power)*math.sin(self.an)],
-                 [self.x + (self.lenght + self.f2_power)*math.cos(self.an), self.y + (self.lenght + self.f2_power)*math.sin(self.an)]])
-
     def draw(self):
+        'функция рисует танк'
         polygon(self.screen, BLACK,
                 [[self.x - 50*math.cos(math.pi/4 + self.an), self.y - 50*math.sin(math.pi/4 + self.an)],
                  [self.x - 50*math.cos(math.pi/4 - self.an),
@@ -206,6 +210,8 @@ class Gun:
             return False
 
     def move_gun(self):
+        '''движение пушки, 
+        зависит от положения мыши'''
         if event.type == MOUSEMOTION:
             if self.x == event.pos[0]:
                 self.an = math.pi/2
@@ -218,6 +224,7 @@ class Gun:
         self.y += self.vy
 
     def power_up(self):
+        '''функция регулирует мощность выстрела'''
         if self.f2_on:
             if self.f2_power < 1000:
                 self.f2_power += 1
@@ -226,19 +233,23 @@ class Gun:
             self.color = GREY
 
 
-def scoreboard(text: str, points: int):
+def scoreboard(text: str, points: int, y):
     '''отображает счет на табло
     k - отношение y координаты табло к высоте экрана
     text - надпись на табло
     points - значение, выводимое на табло
+    y - координата табло
     '''
     font = pygame.font.Font(None, 25)
     text = font.render(text+str(points), True, RED)
-    screen.blit(text, [WIDTH/24, HEIGHT/24])
+    screen.blit(text, [WIDTH/24, y])
 
 
 class Target:
     def __init__(self, screen):
+        '''points - число уничтоженных мишеней
+        vx, vy - проекции скоростей на соотвествующие оси
+        type - тип мишени'''
         self.points = 0
         self.new_target()
         self.screen = screen
@@ -265,6 +276,7 @@ class Target:
         circle(screen, self.color, (self.x, self.y), self.r)
 
     def move_target(self):
+        '''функция отвечает за движение мишени'''
         if self.type == 1:
             self.vx = 10*math.sin(time/2)
         self.y += self.vy
@@ -272,6 +284,17 @@ class Target:
 
         if self.y <= self.r or self.y >= HEIGHT - self.r:
             self.vy = -self.vy
+
+            
+def new_ball(obj, type):
+    'создает новый объект класса Ball, координаты которого совпадают с координитами obj '
+    ball_1 = Ball(screen)
+    balls.append(ball_1)
+    ball_1.vx= random.randint(-20, 20)
+    ball_1.vy = random.randint(-20, 20)
+    ball_1.type = type                             
+    ball_1.x = obj.x
+    ball_1.y = obj.y
 
 
 pygame.init()
@@ -291,8 +314,8 @@ for i in range(number_of_targets):
 while not finished:
 
     screen.fill(WHITE)
-    scoreboard("Очки: ", score)
-    scoreboard("                  Жизни: ", gun.lifes)
+    scoreboard("Очки: ", score, 50)
+    scoreboard("Жизни: ", gun.lives, 100)
     gun.draw()
     gun_2.draw()
     for target in targets:
@@ -305,7 +328,7 @@ while not finished:
     time += 1
 
     if time % 100 == 0:
-        new_ball(gun_2)
+        new_ball(gun_2, 2)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -318,7 +341,7 @@ while not finished:
             gun.targetting(event)
         if event.type == KEYDOWN and event.key == K_UP:
             move = True
-        if event.type == KEYUP and event.key == K_UP:
+        if event.type == KEYDOWN:
             move = False
         if move:
             gun.move_gun() 
@@ -337,12 +360,12 @@ while not finished:
     for target in targets:
         target.move_target()
         if gun.hittest(target) and target.type == 1:
-            gun.lifes -= 1
+            gun.lives -= 1
         for b in balls:
             if gun.hittest(b) and b.type == 2:
-                gun.lifes -= 1
+                gun.lives -= 1
     
-    if gun.lifes <= 0:
+    if gun.lives <= 0:
         screen.fill(WHITE)
         scoreboard("вы проиграли ", score)
         pygame.display.update()
